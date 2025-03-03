@@ -1,16 +1,22 @@
 {
-  "name": "WordPress Development Environment",
-  "image": "mcr.microsoft.com/vscode/devcontainers/php:7.4",
-  "postCreateCommand": "echo 'Setting up WordPress'",
-  "features": {
-    "docker-in-docker": "latest"
-  },
+  "name": "WordPress Development",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "wordpress",
+  "workspaceFolder": "/var/www/html",
+  "forwardPorts": [80, 3306],
+  "remoteUser": "www-data",
+  "postCreateCommand": "sh .devcontainer/post-create.sh",
   "customizations": {
     "vscode": {
       "extensions": [
-        "felixfbecker.php-debug",
-        "ms-azuretools.vscode-docker"
-      ]
+        "bmewburn.vscode-intelephense-client",
+        "xdebug.php-debug",
+        "mrmlnc.vscode-apache",
+        "felixfbecker.php-intellisense"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
     }
   }
 }
