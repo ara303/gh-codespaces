@@ -6,7 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ../:/var/www/html
+      - ..:/workspaces/${localWorkspaceFolderBasename}
+      - wordpress:/var/www/html
     ports:
       - "80:80"
     environment:
@@ -31,3 +32,4 @@ services:
 
 volumes:
   db_data:
+  wordpress:

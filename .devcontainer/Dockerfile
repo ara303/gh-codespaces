@@ -1,31 +1,33 @@
-FROM wordpress:php8.2-apache
+FROM mcr.microsoft.com/vscode/devcontainers/php:0-8.2
 
-# Install additional PHP extensions and tools
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libzip-dev \
-    default-mysql-client \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd mysqli pdo pdo_mysql zip exif \
-    && a2enmod rewrite
-
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Install prerequisites
+RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends \
+    mariadb-client \
+    apache2 \
+    libapache2-mod-php \
+    php-mysql \
+    php-curl \
+    php-gd \
+    php-mbstring \
+    php-xml \
+    php-zip \
+    php-soap \
+    php-intl \
+    less \
+    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # Install WP-CLI
 RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
     && chmod +x wp-cli.phar \
     && mv wp-cli.phar /usr/local/bin/wp
 
-# Add wp-cli bash completion
-RUN curl -o /etc/bash_completion.d/wp-cli -L https://raw.githubusercontent.com/wp-cli/wp-cli/main/utils/wp-completion.bash
+# Setup Apache 
+RUN a2enmod rewrite
+COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
 
-# Configure Apache to use the correct document root
-RUN sed -i 's/\/var\/www\/html/\/var\/www\/html/g' /etc/apache2/sites-available/000-default.conf
+# Configure user
+RUN echo "export PATH=\$PATH:/usr/local/bin" >> /home/vscode/.bashrc
 
-# Fix permissions
-RUN chown -R www-data:www-data /var/www/html
+# Create wordpress directory if it doesn't exist
+RUN mkdir -p /var/www/html && chown -R www-data:www-data /var/www/html

@@ -2,10 +2,10 @@
   "name": "WordPress Development",
   "dockerComposeFile": "docker-compose.yml",
   "service": "wordpress",
-  "workspaceFolder": "/var/www/html",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
   "forwardPorts": [80, 3306],
-  "remoteUser": "www-data",
-  "postCreateCommand": "sh .devcontainer/post-create.sh",
+  "remoteUser": "vscode",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -13,10 +13,7 @@
         "xdebug.php-debug",
         "mrmlnc.vscode-apache",
         "felixfbecker.php-intellisense"
-      ],
-      "settings": {
-        "terminal.integrated.defaultProfile.linux": "bash"
-      }
+      ]
     }
   }
 }
