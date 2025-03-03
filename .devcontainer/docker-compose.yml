@@ -6,8 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - ..:/workspaces/${localWorkspaceFolderBasename}
-      - wordpress:/var/www/html
+      - ..:/workspace
+      - wordpress_data:/var/www/html
     ports:
       - "80:80"
     environment:
@@ -16,8 +16,7 @@ services:
       WORDPRESS_DB_PASSWORD: wordpress
       WORDPRESS_DB_NAME: wordpress
       WORDPRESS_DEBUG: 1
-    depends_on:
-      - db
+    command: /bin/sh -c "service apache2 start && tail -f /dev/null"
 
   db:
     image: mariadb:latest
@@ -32,4 +31,4 @@ services:
 
 volumes:
   db_data:
-  wordpress:
+  wordpress_data:

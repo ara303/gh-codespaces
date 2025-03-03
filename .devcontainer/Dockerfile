@@ -1,33 +1,32 @@
-FROM mcr.microsoft.com/vscode/devcontainers/php:0-8.2
+FROM php:8.2-apache
 
-# Install prerequisites
-RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends \
+# Install dependencies and PHP extensions
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
     mariadb-client \
-    apache2 \
-    libapache2-mod-php \
-    php-mysql \
-    php-curl \
-    php-gd \
-    php-mbstring \
-    php-xml \
-    php-zip \
-    php-soap \
-    php-intl \
-    less \
-    && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    sudo \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd mysqli pdo pdo_mysql zip \
+    && a2enmod rewrite
 
 # Install WP-CLI
 RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
     && chmod +x wp-cli.phar \
     && mv wp-cli.phar /usr/local/bin/wp
 
-# Setup Apache 
-RUN a2enmod rewrite
-COPY apache-config.conf /etc/apache2/sites-available/000-default.conf
+# Create workspace directory
+RUN mkdir -p /workspace && chown -R www-data:www-data /workspace
 
-# Configure user
-RUN echo "export PATH=\$PATH:/usr/local/bin" >> /home/vscode/.bashrc
+# Setup directories and permissions
+RUN chown -R www-data:www-data /var/www/html
 
-# Create wordpress directory if it doesn't exist
-RUN mkdir -p /var/www/html && chown -R www-data:www-data /var/www/html
+# Create post-create script
+COPY post-create.sh /usr/local/bin/post-create.sh
+RUN chmod +x /usr/local/bin/post-create.sh
+
+WORKDIR /workspace

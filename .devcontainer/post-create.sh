@@ -1,45 +1,53 @@
 #!/bin/bash
 
-# Ensure Apache is set to start
-sudo service apache2 start
+# Make sure Apache is running
+service apache2 start
 
-# Wait for database
+# Wait for database to be ready
 echo "Waiting for database connection..."
-until mysql -h db -u wordpress -pwordpress -e "SELECT 1"; do
-  sleep 1
+for i in {1..30}; do
+  if mysql -h db -u wordpress -pwordpress -e "SELECT 1" &> /dev/null; then
+    echo "Database connection established!"
+    break
+  fi
+  echo "Waiting for database... ($i/30)"
+  sleep 2
 done
 
-# Move to WordPress directory
+# Setup WordPress
 cd /var/www/html
 
-# Download and install WordPress if not already there
+# Check if WordPress is already installed
 if [ ! -f wp-config.php ]; then
-  echo "Setting up WordPress..."
-  
-  # Download WordPress
-  sudo -u www-data wp core download
+  echo "Downloading WordPress..."
+  wp core download --allow-root
   
   # Create config
-  sudo -u www-data wp config create --dbname=wordpress --dbuser=wordpress --dbpass=wordpress --dbhost=db
+  echo "Creating WordPress configuration..."
+  wp config create --allow-root --dbname=wordpress --dbuser=wordpress --dbpass=wordpress --dbhost=db
   
   # Install WordPress
-  sudo -u www-data wp core install --url=http://localhost --title="WordPress Dev Site" --admin_user=admin --admin_password=password --admin_email=admin@example.com
+  echo "Installing WordPress..."
+  wp core install --allow-root --url=http://localhost --title="WordPress Dev Site" --admin_user=admin --admin_password=password --admin_email=admin@example.com
   
-  # Enable debugging
-  sudo -u www-data wp config set WP_DEBUG true --raw
+  # Enable debug mode
+  wp config set WP_DEBUG true --allow-root --raw
   
-  echo "WordPress installed successfully!"
+  echo "WordPress setup complete!"
 else
-  echo "WordPress already installed"
+  echo "WordPress already installed."
 fi
 
-# Create a symbolic link from workspace to WordPress themes directory for theme development
-if [ ! -L "/workspaces/${PWD##*/}/wp-content" ]; then
-  echo "Creating symbolic link to WordPress content directory..."
-  mkdir -p /workspaces/${PWD##*/}/wp-content
-  ln -sf /var/www/html/wp-content /workspaces/${PWD##*/}/wp-content
+# Create symbolic links for development
+mkdir -p /workspace/wp-content
+if [ ! -L "/workspace/wp-content/themes" ]; then
+  ln -sf /var/www/html/wp-content/themes /workspace/wp-content/themes
+fi
+if [ ! -L "/workspace/wp-content/plugins" ]; then
+  ln -sf /var/www/html/wp-content/plugins /workspace/wp-content/plugins
 fi
 
 # Fix permissions
-sudo chown -R www-data:www-data /var/www/html
-echo "Setup complete! WordPress is available at http://localhost"
+chown -R www-data:www-data /var/www/html
+
+echo "Setup complete! WordPress is running at http://localhost"
